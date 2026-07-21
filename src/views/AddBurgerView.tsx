@@ -2,7 +2,7 @@ import type { BurgerInput } from '../types/burger';
 import { BurgerForm } from '../components/BurgerForm';
 import { createBurger } from '../services/burgerService';
 import { ensureSignedIn } from '../services/authService';
-import { uploadBurgerPhoto } from '../services/storageService';
+import { fileToCompressedDataUrl } from '../services/imageService';
 
 interface AddBurgerViewProps {
   onDone: () => void;
@@ -11,7 +11,8 @@ interface AddBurgerViewProps {
 
 /**
  * Widok dodawania burgera. Spina formularz z warstwa services:
- * loguje uzytkownika (anonimowo, jesli trzeba), wgrywa zdjecie i zapisuje wpis.
+ * loguje uzytkownika (anonimowo, jesli trzeba), kompresuje zdjecie do Data URL
+ * (bez Storage) i zapisuje wpis w Firestore.
  */
 export function AddBurgerView({ onDone, onCancel }: AddBurgerViewProps) {
   async function handleSubmit(input: BurgerInput, photoFile: File | null) {
@@ -19,8 +20,8 @@ export function AddBurgerView({ onDone, onCancel }: AddBurgerViewProps) {
 
     let photos = input.photos ?? [];
     if (photoFile) {
-      const url = await uploadBurgerPhoto(photoFile);
-      photos = [url];
+      const dataUrl = await fileToCompressedDataUrl(photoFile);
+      photos = [dataUrl];
     }
 
     await createBurger({ ...input, photos });

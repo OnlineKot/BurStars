@@ -7,7 +7,6 @@
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
-import { getStorage, connectStorageEmulator, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,7 +20,6 @@ const firebaseConfig: FirebaseOptions = {
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const db: Firestore = getFirestore(app);
 export const auth: Auth = getAuth(app);
-export const storage: FirebaseStorage = getStorage(app);
 
 /**
  * Podpiecie lokalnych emulatorow (Firestore + Auth), gdy
@@ -34,8 +32,6 @@ if (useEmulators) {
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
   // Auth emulator: domyslnie 127.0.0.1:9099.
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  // Storage emulator: domyslnie 127.0.0.1:9199.
-  connectStorageEmulator(storage, '127.0.0.1', 9199);
   // Log tylko w dev, aby bylo jasne ze nie laczymy sie z produkcja.
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
