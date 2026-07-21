@@ -1,0 +1,62 @@
+.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-view__toolbar {
+  display: flex;
+  justify-content: center;
+}
+
+.segmented {
+  display: inline-flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.segmented__btn {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.segmented__btn.is-active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.list-view__status {
+  text-align: center;
+  color: var(--color-muted);
+  padding: 32px 0;
+}
+
+.list-view__status--error {
+  color: var(--color-danger);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.list-view__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* Na szerszych ekranach (tablet/desktop) — dwie kolumny. */
+@media (min-width: 560px) {
+  .list-view__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

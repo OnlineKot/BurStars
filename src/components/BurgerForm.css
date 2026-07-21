@@ -1,0 +1,17 @@
+.burger-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.burger-form__error {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+
+.burger-form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

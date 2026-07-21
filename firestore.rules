@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// Reguly bezpieczenstwa dla BurStars ("Skala Burgerowa").
+// Model: kazdy wpis burgera nalezy do zalogowanego uzytkownika (ownerUid).
+// Odczyt publiczny (galeria ocen), zapis tylko dla wlasciciela wpisu.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Funkcje pomocnicze ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerUid) {
+      return isSignedIn() && request.auth.uid == ownerUid;
+    }
+
+    // Walidacja ksztaltu i typow wpisu burgera.
+    function isValidBurger(data) {
+      return data.keys().hasAll(['name', 'rating', 'ownerUid', 'createdAt'])
+        // nazwa: niepusty string, max 120 znakow
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        // ocena: liczba calkowita 1..10
+        && data.rating is int
+        && data.rating >= 1
+        && data.rating <= 10
+        // wlasciciel musi zgadzac sie z zalogowanym userem
+        && data.ownerUid is string
+        && data.ownerUid == request.auth.uid
+        // znacznik czasu utworzenia
+        && data.createdAt is timestamp
+        // pola opcjonalne: jesli istnieja, musza miec poprawny typ
+        && (!('locationName' in data) || data.locationName is string)
+        && (!('lat' in data) || data.lat is number)
+        && (!('lng' in data) || data.lng is number)
+        && (!('photos' in data) || data.photos is list)
+        && (!('tags' in data) || data.tags is list)
+        && (!('notes' in data) || data.notes is string)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    match /burgers/{burgerId} {
+      // Odczyt galerii dostepny publicznie.
+      allow read: if true;
+
+      // Tworzenie: tylko zalogowany, poprawny ksztalt, owner == uid.
+      allow create: if isSignedIn()
+        && isValidBurger(request.resource.data);
+
+      // Aktualizacja: tylko wlasciciel, ownerUid niezmienny, poprawny ksztalt.
+      allow update: if isOwner(resource.data.ownerUid)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && isValidBurger(request.resource.data);
+
+      // Usuwanie: tylko wlasciciel.
+      allow delete: if isOwner(resource.data.ownerUid);
+    }
+
+    // Domyslnie: wszystko inne zablokowane.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
