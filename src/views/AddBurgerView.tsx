@@ -2,6 +2,7 @@ import type { BurgerInput } from '../types/burger';
 import { BurgerForm } from '../components/BurgerForm';
 import { createBurger } from '../services/burgerService';
 import { ensureSignedIn } from '../services/authService';
+import { uploadBurgerPhoto } from '../services/storageService';
 
 interface AddBurgerViewProps {
   onDone: () => void;
@@ -10,12 +11,19 @@ interface AddBurgerViewProps {
 
 /**
  * Widok dodawania burgera. Spina formularz z warstwa services:
- * loguje uzytkownika (anonimowo, jesli trzeba) i zapisuje wpis.
+ * loguje uzytkownika (anonimowo, jesli trzeba), wgrywa zdjecie i zapisuje wpis.
  */
 export function AddBurgerView({ onDone, onCancel }: AddBurgerViewProps) {
-  async function handleSubmit(input: BurgerInput) {
+  async function handleSubmit(input: BurgerInput, photoFile: File | null) {
     await ensureSignedIn();
-    await createBurger(input);
+
+    let photos = input.photos ?? [];
+    if (photoFile) {
+      const url = await uploadBurgerPhoto(photoFile);
+      photos = [url];
+    }
+
+    await createBurger({ ...input, photos });
     onDone();
   }
 

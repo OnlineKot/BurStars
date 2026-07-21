@@ -63,11 +63,16 @@ function requireUid(): string {
   return uid;
 }
 
-/** Waliduje ocene: liczba calkowita 1-10. */
+/** Waliduje ocene: liczba 1-10 (dozwolone dziesietne, np. 7.5). */
 function assertRating(rating: number): void {
-  if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
-    throw new ServiceError('validation/invalid-input', 'Ocena musi byc liczba calkowita 1-10.');
+  if (typeof rating !== 'number' || Number.isNaN(rating) || rating < 1 || rating > 10) {
+    throw new ServiceError('validation/invalid-input', 'Ocena musi byc liczba od 1 do 10.');
   }
+}
+
+/** Zaokragla ocene do jednego miejsca po przecinku (np. 7.53 -> 7.5). */
+function normalizeRating(rating: number): number {
+  return Math.round(rating * 10) / 10;
 }
 
 /** Waliduje nazwe: niepusty string, max 120 znakow. */
@@ -85,7 +90,7 @@ function assertName(name: string): void {
 function buildWriteData(input: BurgerInput | BurgerUpdate): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (input.name !== undefined) out.name = input.name.trim();
-  if (input.rating !== undefined) out.rating = input.rating;
+  if (input.rating !== undefined) out.rating = normalizeRating(input.rating);
   if (input.locationName !== undefined) out.locationName = input.locationName.trim();
   if (input.geo !== undefined) {
     out.lat = input.geo.lat;
@@ -110,7 +115,7 @@ export async function createBurger(input: BurgerInput): Promise<string> {
       ...buildWriteData(input),
       // pola wymagane, wypelniane systemowo
       name: input.name.trim(),
-      rating: input.rating,
+      rating: normalizeRating(input.rating),
       ownerUid: uid,
       photos: input.photos ?? [],
       tags: input.tags ?? [],

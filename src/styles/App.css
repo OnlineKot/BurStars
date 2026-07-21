@@ -49,27 +49,62 @@
 .app__main {
   flex: 1;
   padding: var(--space);
+  /* miejsce na dolny pasek nawigacji */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
-/* Pływający przycisk dodawania (FAB) — wygodny kciukiem na telefonie. */
-.app__fab {
+/* Dolny pasek nawigacji — kciukowy zasieg na telefonie. */
+.app__nav {
   position: fixed;
-  right: max(var(--space), env(safe-area-inset-right));
-  bottom: max(var(--space), env(safe-area-inset-bottom));
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 640px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 20;
+}
+
+.app__nav-btn {
+  appearance: none;
   border: none;
+  background: transparent;
+  padding: 10px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 60px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app__nav-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.app__nav-btn.is-active {
+  color: var(--color-primary);
+}
+
+.app__nav-btn--primary .app__nav-icon {
   background: var(--color-primary);
   color: #fff;
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-}
-
-.app__fab:active {
-  transform: scale(0.95);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
 }
 
 /* --- Widok dodawania --- */

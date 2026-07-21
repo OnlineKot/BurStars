@@ -23,8 +23,8 @@ service cloud.firestore {
         && data.name is string
         && data.name.size() > 0
         && data.name.size() <= 120
-        // ocena: liczba calkowita 1..10
-        && data.rating is int
+        // ocena: liczba 1..10 (dozwolone dziesietne, np. 7.5)
+        && data.rating is number
         && data.rating >= 1
         && data.rating <= 10
         // wlasciciel musi zgadzac sie z zalogowanym userem
