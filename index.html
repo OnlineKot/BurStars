@@ -34,15 +34,35 @@
             '<p style="color:#7a6d60; font-size:13px">Zrób zrzut ekranu i wyślij — to nam powie, co naprawić.</p>' +
             '</div>';
         }
-        window.addEventListener('error', function (e) {
-          var msg = (e && e.message) || 'Nieznany błąd';
-          if (e && e.filename) msg += '\n@ ' + e.filename + ':' + e.lineno + ':' + e.colno;
-          showError('Błąd JavaScript', msg);
-        });
+        // capture=true lapie takze bledy ladowania zasobow (script/link).
+        window.addEventListener(
+          'error',
+          function (e) {
+            var el = e && e.target;
+            if (el && (el.tagName === 'SCRIPT' || el.tagName === 'LINK')) {
+              showError('Nie udało się załadować pliku', el.src || el.href || '(nieznany)');
+              return;
+            }
+            var msg = (e && e.message) || 'Nieznany błąd';
+            if (e && e.filename) msg += '\n@ ' + e.filename + ':' + e.lineno + ':' + e.colno;
+            showError('Błąd JavaScript', msg);
+          },
+          true,
+        );
         window.addEventListener('unhandledrejection', function (e) {
           var r = e && e.reason;
           showError('Nieobsłużony błąd', (r && (r.message || r.code)) || r);
         });
+        // Jesli po 8s aplikacja nadal nie wystartowala (placeholder wciaz widoczny),
+        // pokaz komunikat zamiast wiecznego "Ładowanie".
+        setTimeout(function () {
+          if (document.getElementById('boot')) {
+            showError(
+              'Aplikacja nie wystartowała',
+              'Skrypt nie wykonał się w ~8 s. Zwykle to problem z pobraniem pliku JS albo zgodnością przeglądarki.',
+            );
+          }
+        }, 8000);
       })();
     </script>
 
