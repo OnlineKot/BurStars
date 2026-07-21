@@ -5,18 +5,16 @@ on:
     branches: [claude/burstars-burger-app-fpjx2x]
   workflow_dispatch:
 
+# Publikacja na galaz gh-pages wymaga zapisu do repozytorium.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Pozwol na jeden rownolegly deploy; nie przerywaj trwajacego wdrozenia.
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,28 +32,16 @@ jobs:
       - name: Build
         env:
           # Na Pages nie ma emulatorow — laczymy sie z prawdziwym Firebase.
-          # Wartosci konfiguracji Firebase czytane sa z pliku .env.production
-          # (config webowy Firebase nie jest tajny — i tak trafia do przegladarki).
+          # Config Firebase czytany jest z pliku .env.production.
           VITE_USE_FIREBASE_EMULATORS: 'false'
         run: npm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      # Publikacja zbudowanej aplikacji na galaz gh-pages.
+      # Dla publicznego repo GitHub zwykle sam wlacza Pages z tej galezi.
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Dodaje .nojekyll, aby katalog /assets nie byl przetwarzany przez Jekyll.
+          enable_jekyll: false
