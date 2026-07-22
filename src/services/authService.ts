@@ -1,21 +1,34 @@
 /**
  * authService — jedyna warstwa dostepu do Firebase Auth.
  *
- * Obejmuje logowanie zwyklego uzytkownika oraz weryfikacje dostepu
- * administracyjnego (ukryta funkcja "TEO + 7 klikniec"). Hasla NIE MA w kodzie —
- * jest weryfikowane przez Firebase Auth po stronie serwera.
+ * Model: aplikacja ma jednego wlasciciela (VITE_ADMIN_EMAIL). Wlasciciel loguje
+ * sie kontem Google i tylko on moze dodawac/edytowac/usuwac wpisy. Pozostali
+ * uzytkownicy ogladaja tresc bez logowania (odczyt publiczny).
  */
 import {
-  onAuthStateChanged,
-  signInAnonymously,
-  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut,
+  onAuthStateChanged,
   type Unsubscribe,
   type User,
 } from 'firebase/auth';
 
 import { auth } from '../lib/firebase';
-import { ServiceError, toServiceError } from './serviceError';
+import { toServiceError } from './serviceError';
+
+/** Email konta wlasciciela (jedyne z prawem zapisu). */
+export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+
+/** Czy podany uzytkownik to wlasciciel (zweryfikowany email zgodny z ADMIN_EMAIL). */
+export function isOwner(user: User | null): boolean {
+  return (
+    !!user &&
+    user.emailVerified &&
+    !!user.email &&
+    user.email.toLowerCase() === String(ADMIN_EMAIL).toLowerCase()
+  );
+}
 
 /** Subskrypcja zmian stanu zalogowania. Zwraca funkcje odpinajaca. */
 export function onAuthChange(callback: (user: User | null) => void): Unsubscribe {
@@ -28,62 +41,21 @@ export function getCurrentUser(): User | null {
 }
 
 /**
- * Loguje anonimowo, jesli nikt nie jest zalogowany. Pozwala tworzyc wpisy
- * bez pelnej rejestracji. Zwraca aktywnego uzytkownika.
+ * Logowanie kontem Google (popup). Zwraca zalogowanego uzytkownika.
+ * Sprawdzenie uprawnien wlasciciela robi warstwa wyzej (isOwner).
  */
-export async function ensureSignedIn(): Promise<User> {
-  if (auth.currentUser) {
-    return auth.currentUser;
-  }
+export async function signInWithGoogle(): Promise<User> {
   try {
-    const cred = await signInAnonymously(auth);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const cred = await signInWithPopup(auth, provider);
     return cred.user;
   } catch (error) {
-    throw toServiceError(error, 'Nie udalo sie zalogowac.');
+    throw toServiceError(error, 'Logowanie Google nie powiodlo sie.');
   }
 }
 
-/**
- * Weryfikacja dostepu administracyjnego wywolywana przez modal hasla.
- *
- * Konto administratora (email) pochodzi z konfiguracji (VITE_ADMIN_EMAIL),
- * a haslo jest podawane przez uzytkownika i sprawdzane przez Firebase Auth.
- * Zadne haslo nie jest przechowywane w kodzie ani porownywane lokalnie.
- *
- * Zwraca zalogowanego administratora przy powodzeniu.
- */
-export async function verifyAdminAccess(password: string): Promise<User> {
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-  if (!adminEmail) {
-    throw new ServiceError(
-      'validation/invalid-input',
-      'Brak skonfigurowanego konta administratora (VITE_ADMIN_EMAIL).',
-    );
-  }
-  if (!password) {
-    throw new ServiceError('validation/invalid-input', 'Podaj haslo.');
-  }
-  try {
-    const cred = await signInWithEmailAndPassword(auth, adminEmail, password);
-    return cred.user;
-  } catch (error) {
-    // Firebase zwraca m.in. auth/wrong-password, auth/invalid-credential.
-    const code =
-      typeof error === 'object' && error !== null && 'code' in error
-        ? String((error as { code: unknown }).code)
-        : '';
-    if (
-      code === 'auth/wrong-password' ||
-      code === 'auth/invalid-credential' ||
-      code === 'auth/user-not-found'
-    ) {
-      throw new ServiceError('auth/forbidden', 'Nieprawidlowe haslo.', error);
-    }
-    throw toServiceError(error, 'Nie udalo sie zweryfikowac dostepu.');
-  }
-}
-
-/** Wylogowuje biezacego uzytkownika. */
+/** Wylogowanie biezacego uzytkownika. */
 export async function signOutUser(): Promise<void> {
   try {
     await signOut(auth);

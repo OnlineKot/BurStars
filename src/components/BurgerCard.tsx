@@ -4,6 +4,10 @@ import './BurgerCard.css';
 
 interface BurgerCardProps {
   burger: Burger;
+  /** Tryb wlasciciela — pokazuje przyciski edycji/usuwania. */
+  owner?: boolean;
+  onEdit?: (burger: Burger) => void;
+  onDelete?: (burger: Burger) => void;
 }
 
 /** Formatuje Firestore Timestamp na czytelna date (bez zewnetrznych bibliotek). */
@@ -24,7 +28,7 @@ function formatDate(burger: Burger): string {
  * Karta pojedynczego burgera. Komponent prezentacyjny — dane dostaje przez propsy.
  * Tresc renderowana natywnymi elementami HTML (bez Markdownu).
  */
-export function BurgerCard({ burger }: BurgerCardProps) {
+export function BurgerCard({ burger, owner, onEdit, onDelete }: BurgerCardProps) {
   const cover = burger.photos[0];
 
   return (
@@ -61,6 +65,24 @@ export function BurgerCard({ burger }: BurgerCardProps) {
 
         <footer className="burger-card__footer">
           <time className="burger-card__date">{formatDate(burger)}</time>
+          {owner && (
+            <div className="burger-card__actions">
+              <button
+                type="button"
+                className="burger-card__action"
+                onClick={() => onEdit?.(burger)}
+              >
+                ✏️ Edytuj
+              </button>
+              <button
+                type="button"
+                className="burger-card__action burger-card__action--danger"
+                onClick={() => onDelete?.(burger)}
+              >
+                🗑️ Usun
+              </button>
+            </div>
+          )}
         </footer>
       </div>
     </article>

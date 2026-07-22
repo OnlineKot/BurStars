@@ -12,8 +12,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(ownerUid) {
-      return isSignedIn() && request.auth.uid == ownerUid;
+    // Wlasciciel = konkretne, zweryfikowane konto Google.
+    function isOwner() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'programistatf@gmail.com';
     }
 
     // Walidacja ksztaltu i typow wpisu burgera.
@@ -43,20 +46,13 @@ service cloud.firestore {
     }
 
     match /burgers/{burgerId} {
-      // Odczyt galerii dostepny publicznie.
+      // Odczyt galerii dostepny publicznie (kazdy oglada bez logowania).
       allow read: if true;
 
-      // Tworzenie: tylko zalogowany, poprawny ksztalt, owner == uid.
-      allow create: if isSignedIn()
-        && isValidBurger(request.resource.data);
-
-      // Aktualizacja: tylko wlasciciel, ownerUid niezmienny, poprawny ksztalt.
-      allow update: if isOwner(resource.data.ownerUid)
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && isValidBurger(request.resource.data);
-
-      // Usuwanie: tylko wlasciciel.
-      allow delete: if isOwner(resource.data.ownerUid);
+      // Zapis tylko dla wlasciciela (konto Google programistatf@gmail.com).
+      allow create: if isOwner() && isValidBurger(request.resource.data);
+      allow update: if isOwner() && isValidBurger(request.resource.data);
+      allow delete: if isOwner();
     }
 
     // Domyslnie: wszystko inne zablokowane.

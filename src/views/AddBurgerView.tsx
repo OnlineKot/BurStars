@@ -1,37 +1,40 @@
-import type { BurgerInput } from '../types/burger';
+import type { Burger, BurgerInput } from '../types/burger';
 import { BurgerForm } from '../components/BurgerForm';
-import { createBurger } from '../services/burgerService';
-import { ensureSignedIn } from '../services/authService';
+import { createBurger, updateBurger } from '../services/burgerService';
 import { fileToCompressedDataUrl } from '../services/imageService';
 
 interface AddBurgerViewProps {
+  /** Jesli podany — tryb edycji istniejacego wpisu. */
+  editing?: Burger | null;
   onDone: () => void;
   onCancel: () => void;
 }
 
 /**
- * Widok dodawania burgera. Spina formularz z warstwa services:
- * loguje uzytkownika (anonimowo, jesli trzeba), kompresuje zdjecie do Data URL
- * (bez Storage) i zapisuje wpis w Firestore.
+ * Widok dodawania/edycji burgera (tylko dla wlasciciela). Spina formularz
+ * z warstwa services: kompresuje zdjecie do Data URL (bez Storage) i zapisuje.
+ * Wlasciciel jest juz zalogowany kontem Google, wiec zapis przechodzi reguly.
  */
-export function AddBurgerView({ onDone, onCancel }: AddBurgerViewProps) {
+export function AddBurgerView({ editing, onDone, onCancel }: AddBurgerViewProps) {
   async function handleSubmit(input: BurgerInput, photoFile: File | null) {
-    await ensureSignedIn();
-
     let photos = input.photos ?? [];
     if (photoFile) {
       const dataUrl = await fileToCompressedDataUrl(photoFile);
       photos = [dataUrl];
     }
 
-    await createBurger({ ...input, photos });
+    if (editing) {
+      await updateBurger(editing.id, { ...input, photos });
+    } else {
+      await createBurger({ ...input, photos });
+    }
     onDone();
   }
 
   return (
     <section className="add-view">
-      <h1 className="add-view__title">Nowy burger</h1>
-      <BurgerForm onSubmit={handleSubmit} onCancel={onCancel} />
+      <h1 className="add-view__title">{editing ? 'Edytuj burgera' : 'Nowy burger'}</h1>
+      <BurgerForm initial={editing ?? undefined} onSubmit={handleSubmit} onCancel={onCancel} />
     </section>
   );
 }

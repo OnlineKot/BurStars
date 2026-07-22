@@ -11,56 +11,50 @@
   </head>
   <body>
     <div id="root">
-      <div id="boot" style="font-family: system-ui, sans-serif; padding: 24px; color: #7a6d60">
-        Ładowanie BurStars… 🍔
+      <div class="boot" id="boot">
+        <div class="boot__logo">🍔</div>
+        <div class="boot__text">Ładowanie…</div>
       </div>
     </div>
 
-    <!-- Diagnostyka: jesli aplikacja nie wystartuje, pokaz blad na stronie
-         zamiast bialego ekranu (pomaga na urzadzeniach bez dostepu do konsoli). -->
+    <style>
+      .boot {
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-family: system-ui, sans-serif;
+        color: #7a6d60;
+      }
+      .boot__logo {
+        font-size: 3rem;
+        animation: boot-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes boot-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.15); opacity: 1; }
+      }
+    </style>
+
+    <!-- Awaryjny komunikat: zamiast bialego ekranu, gdy aplikacja sie nie zaladuje. -->
     <script>
       (function () {
-        function showError(title, detail) {
+        function showError() {
           var root = document.getElementById('root');
-          if (!root) return;
+          if (!root || !document.getElementById('boot')) return;
           root.innerHTML =
-            '<div style="font-family: system-ui, sans-serif; padding: 20px; color: #241a12">' +
-            '<h2 style="color:#c0392b; margin:0 0 8px">⚠️ ' + title + '</h2>' +
-            '<pre style="white-space: pre-wrap; word-break: break-word; background:#faf3ef; border:1px solid #ece3d8; border-radius:10px; padding:12px; font-size:13px; color:#8f2e00">' +
-            String(detail).replace(/[<>]/g, '') +
-            '</pre>' +
-            '<p style="color:#7a6d60; font-size:13px">Zrób zrzut ekranu i wyślij — to nam powie, co naprawić.</p>' +
+            '<div style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:24px;font-family:system-ui,sans-serif;color:#241a12">' +
+            '<div style="font-size:2.5rem">🍔</div>' +
+            '<h2 style="margin:0;color:#b23a00">Nie udało się załadować</h2>' +
+            '<p style="color:#7a6d60;max-width:320px">Sprawdź połączenie z internetem i odśwież stronę.</p>' +
+            '<button onclick="location.reload()" style="margin-top:8px;border:none;background:#b23a00;color:#fff;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer">Odśwież</button>' +
             '</div>';
         }
-        // capture=true lapie takze bledy ladowania zasobow (script/link).
-        window.addEventListener(
-          'error',
-          function (e) {
-            var el = e && e.target;
-            if (el && (el.tagName === 'SCRIPT' || el.tagName === 'LINK')) {
-              showError('Nie udało się załadować pliku', el.src || el.href || '(nieznany)');
-              return;
-            }
-            var msg = (e && e.message) || 'Nieznany błąd';
-            if (e && e.filename) msg += '\n@ ' + e.filename + ':' + e.lineno + ':' + e.colno;
-            showError('Błąd JavaScript', msg);
-          },
-          true,
-        );
-        window.addEventListener('unhandledrejection', function (e) {
-          var r = e && e.reason;
-          showError('Nieobsłużony błąd', (r && (r.message || r.code)) || r);
-        });
-        // Jesli po 8s aplikacja nadal nie wystartowala (placeholder wciaz widoczny),
-        // pokaz komunikat zamiast wiecznego "Ładowanie".
-        setTimeout(function () {
-          if (document.getElementById('boot')) {
-            showError(
-              'Aplikacja nie wystartowała',
-              'Skrypt nie wykonał się w ~8 s. Zwykle to problem z pobraniem pliku JS albo zgodnością przeglądarki.',
-            );
-          }
-        }, 8000);
+        window.addEventListener('error', showError, true);
+        window.addEventListener('unhandledrejection', showError);
+        setTimeout(showError, 10000);
       })();
     </script>
 

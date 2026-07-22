@@ -69,9 +69,35 @@
 
 .burger-card__footer {
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .burger-card__date {
   font-size: 0.78rem;
   color: var(--color-muted);
+}
+
+.burger-card__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.burger-card__action {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.burger-card__action--danger {
+  color: var(--color-danger);
+  border-color: #f0cfc9;
 }

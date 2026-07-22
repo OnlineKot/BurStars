@@ -1,25 +1,27 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import type { BurgerInput } from '../types/burger';
+import type { Burger, BurgerInput } from '../types/burger';
 import './BurgerForm.css';
 
 interface BurgerFormProps {
-  /** Zapis: dane wpisu + opcjonalny plik zdjecia (wgrywany przez widok). */
+  /** Wartosci poczatkowe (tryb edycji). */
+  initial?: Burger;
+  /** Zapis: dane wpisu + opcjonalny plik zdjecia (kompresowany przez widok). */
   onSubmit: (input: BurgerInput, photoFile: File | null) => Promise<void>;
   onCancel: () => void;
 }
 
 /**
- * Formularz dodawania burgera. Zbiera dane (w tym ocene dziesietna, np. 7.5,
- * oraz zdjecie z telefonu) i przekazuje je w gore. Nie dotyka Firebase.
+ * Formularz dodawania/edycji burgera. Zbiera dane (ocena dziesietna, zdjecie
+ * z telefonu) i przekazuje je w gore. Nie dotyka Firebase.
  */
-export function BurgerForm({ onSubmit, onCancel }: BurgerFormProps) {
-  const [name, setName] = useState('');
-  const [ratingText, setRatingText] = useState('7.5');
-  const [locationName, setLocationName] = useState('');
-  const [tagsText, setTagsText] = useState('');
-  const [notes, setNotes] = useState('');
+export function BurgerForm({ initial, onSubmit, onCancel }: BurgerFormProps) {
+  const [name, setName] = useState(initial?.name ?? '');
+  const [ratingText, setRatingText] = useState(initial ? String(initial.rating) : '7.5');
+  const [locationName, setLocationName] = useState(initial?.locationName ?? '');
+  const [tagsText, setTagsText] = useState(initial?.tags.join(', ') ?? '');
+  const [notes, setNotes] = useState(initial?.notes ?? '');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(initial?.photos[0] ?? null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,12 +29,12 @@ export function BurgerForm({ onSubmit, onCancel }: BurgerFormProps) {
   function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     setPhotoFile(file);
-    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   }
 
   function clearPhoto() {
-    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
     setPhotoFile(null);
     setPhotoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -67,6 +69,8 @@ export function BurgerForm({ onSubmit, onCancel }: BurgerFormProps) {
           locationName: locationName.trim() || undefined,
           tags,
           notes: notes.trim() || undefined,
+          // zachowaj istniejace zdjecie, jesli nie wybrano nowego
+          photos: initial?.photos ?? [],
         },
         photoFile,
       );
@@ -169,7 +173,7 @@ export function BurgerForm({ onSubmit, onCancel }: BurgerFormProps) {
           Anuluj
         </button>
         <button type="submit" className="btn btn--primary" disabled={busy}>
-          {busy ? 'Zapisuje…' : 'Zapisz burgera'}
+          {busy ? 'Zapisuje…' : initial ? 'Zapisz zmiany' : 'Zapisz burgera'}
         </button>
       </div>
     </form>
