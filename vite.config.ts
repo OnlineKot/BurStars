@@ -16,9 +16,10 @@ function stripCrossorigin(): Plugin {
 }
 
 // https://vitejs.dev/config/
-// Na produkcji (GitHub Pages) aplikacja jest serwowana z podkatalogu /BurStars/.
+// GitHub Pages serwuje glowna galaz repo (projekt pod /BurStars/), a zbudowana
+// aplikacja jest publikowana przez CI do katalogu app/ tej galezi — stad base.
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/BurStars/' : '/',
+  base: command === 'build' ? '/BurStars/app/' : '/',
   plugins: [react(), stripCrossorigin()],
   build: {
     // Szeroka kompatybilnosc, w tym starsze Safari na iOS.
