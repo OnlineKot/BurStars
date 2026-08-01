@@ -5,6 +5,7 @@ import { AddBurgerView } from './views/AddBurgerView';
 import { StatsView } from './views/StatsView';
 import { useSecretUnlock } from './hooks/useSecretUnlock';
 import { useAuth } from './hooks/useAuth';
+import { CodeGate } from './components/CodeGate';
 import { signInWithGoogle, signOutUser, isOwner } from './services/authService';
 import './styles/App.css';
 
@@ -24,6 +25,7 @@ export function App() {
   const [reloadKey, setReloadKey] = useState(0);
   const [editing, setEditing] = useState<Burger | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showCodeGate, setShowCodeGate] = useState(false);
 
   async function handleOwnerLogin() {
     setNotice(null);
@@ -38,8 +40,12 @@ export function App() {
     }
   }
 
-  // Ukryta funkcja: "TEO" + 7 klikniec w tytul -> logowanie wlasciciela.
-  const { registerTap } = useSecretUnlock(() => void handleOwnerLogin());
+  // Ukryte wejscie wlasciciela: "TEO" + 7 klikniec w tytul -> logowanie Google.
+  // Na telefonie (brak klawiatury) 7 klikniec otwiera okienko na kod.
+  const { registerTap } = useSecretUnlock({
+    onUnlock: () => void handleOwnerLogin(),
+    onCodeRequired: () => setShowCodeGate(true),
+  });
 
   function goList() {
     setEditing(null);
@@ -131,6 +137,18 @@ export function App() {
           Statystyki
         </button>
       </nav>
+
+      {showCodeGate && (
+        <CodeGate
+          onClose={() => setShowCodeGate(false)}
+          onSubmit={(code) => {
+            setShowCodeGate(false);
+            if (code.trim().toUpperCase() === 'TEO') {
+              void handleOwnerLogin();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -186,7 +186,7 @@ export async function listBurgers(options: ListBurgersOptions = {}): Promise<Bur
  * Aktualizuje istniejacy wpis. Waliduje pola, jesli sa obecne.
  */
 export async function updateBurger(id: string, patch: BurgerUpdate): Promise<void> {
-  requireUid();
+  const uid = requireUid();
   if (!id) {
     throw new ServiceError('validation/invalid-input', 'Brak identyfikatora wpisu.');
   }
@@ -196,6 +196,8 @@ export async function updateBurger(id: string, patch: BurgerUpdate): Promise<voi
   try {
     const data = {
       ...buildWriteData(patch),
+      // reguly wymagaja ownerUid == uid piszacego; wlasciciel przejmuje wpis
+      ownerUid: uid,
       updatedAt: serverTimestamp(),
     };
     await updateDoc(doc(db, COLLECTION, id), data);

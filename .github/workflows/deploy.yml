@@ -5,9 +5,11 @@ on:
     branches: [claude/burstars-burger-app-fpjx2x]
   workflow_dispatch:
 
-# Publikacja na galaz gh-pages wymaga zapisu do repozytorium.
+# Publikacja na galaz gh-pages wymaga zapisu do repozytorium;
+# pages: write pozwala przestawic zrodlo Pages przez API.
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: pages
@@ -45,3 +47,24 @@ jobs:
           publish_dir: ./dist
           # Dodaje .nojekyll, aby katalog /assets nie byl przetwarzany przez Jekyll.
           enable_jekyll: false
+
+      # Pages bylo recznie ustawione na galaz zrodlowa (serwowalo surowy kod).
+      # Ten krok przestawia zrodlo Pages na gh-pages przez API i prosi o rebuild.
+      # continue-on-error: gdy token nie ma uprawnien, deploy i tak sie udal —
+      # wtedy zrodlo trzeba przestawic raz recznie w Settings -> Pages.
+      - name: Point Pages at gh-pages branch
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          code=$(curl -s -o /tmp/pages.json -w '%{http_code}' -X PUT \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages" \
+            -d '{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}')
+          echo "PUT /pages -> HTTP $code"
+          cat /tmp/pages.json || true
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" || true

@@ -1,0 +1,50 @@
+.codegate-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 12, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space);
+  z-index: 100;
+}
+
+.codegate {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.codegate__label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+
+.codegate__input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.codegate__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(178, 58, 0, 0.12);
+}
+
+.codegate__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
