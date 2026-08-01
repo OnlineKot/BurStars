@@ -5,8 +5,7 @@ on:
     branches: [claude/burstars-burger-app-fpjx2x]
   workflow_dispatch:
 
-# CI commituje zbudowana aplikacje do katalogu app/ na tej samej galezi,
-# ktora serwuje GitHub Pages (Settings -> Pages wskazuje na ta galaz).
+# Publikacja na galaz gh-pages (Settings -> Pages: Deploy from a branch, gh-pages).
 permissions:
   contents: write
 
@@ -37,20 +36,11 @@ jobs:
           VITE_USE_FIREBASE_EMULATORS: 'false'
         run: npm run build
 
-      # Pages serwuje ta galaz — wiec zbudowana aplikacja trafia do app/,
-      # a index.html w korzeniu przekierowuje na /BurStars/app/.
-      # "[skip ci]" zapobiega zapetleniu workflow po wlasnym pushu.
-      - name: Publish built app to app/ on this branch
-        run: |
-          rm -rf app
-          mkdir app
-          cp -r dist/* app/
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A app
-          if git diff --cached --quiet; then
-            echo "Brak zmian w app/ — pomijam commit."
-          else
-            git commit -m "chore: publish built app to app/ [skip ci]"
-            git push
-          fi
+      # Publikacja zbudowanej aplikacji na galaz gh-pages, ktora serwuje Pages.
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Dodaje .nojekyll, aby katalog /assets nie byl przetwarzany przez Jekyll.
+          enable_jekyll: false
