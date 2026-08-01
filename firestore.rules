@@ -13,6 +13,8 @@ service cloud.firestore {
     }
 
     // Wlasciciel = konkretne, zweryfikowane konto Google.
+    // UWAGA: ten email musi byc zgodny z VITE_ADMIN_EMAIL w .env.production —
+    // zmieniajac jedno, zmien tez drugie (i opublikuj reguly ponownie).
     function isOwner() {
       return isSignedIn()
         && request.auth.token.email_verified == true
@@ -35,13 +37,15 @@ service cloud.firestore {
         && data.ownerUid == request.auth.uid
         // znacznik czasu utworzenia
         && data.createdAt is timestamp
-        // pola opcjonalne: jesli istnieja, musza miec poprawny typ
-        && (!('locationName' in data) || data.locationName is string)
+        // pola opcjonalne: poprawny typ + limity rozmiaru
+        // (zdjecia to Data URL-e w dokumencie — limity chronia przed
+        // przekroczeniem 1 MB na dokument Firestore)
+        && (!('locationName' in data) || (data.locationName is string && data.locationName.size() <= 200))
         && (!('lat' in data) || data.lat is number)
         && (!('lng' in data) || data.lng is number)
-        && (!('photos' in data) || data.photos is list)
-        && (!('tags' in data) || data.tags is list)
-        && (!('notes' in data) || data.notes is string)
+        && (!('photos' in data) || (data.photos is list && data.photos.size() <= 1))
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 20))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 5000))
         && (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 

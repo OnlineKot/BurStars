@@ -54,7 +54,8 @@
         }
         window.addEventListener('error', showError, true);
         window.addEventListener('unhandledrejection', showError);
-        setTimeout(showError, 10000);
+        // Ostatnia deska ratunku przy bardzo wolnym laczu — dopiero po 20 s.
+        setTimeout(showError, 20000);
       })();
     </script>
 

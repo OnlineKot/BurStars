@@ -11,7 +11,12 @@ import { ServiceError } from './serviceError';
 const MAX_DIMENSION = 1000;
 /** Jakosc kompresji JPEG (0-1). */
 const JPEG_QUALITY = 0.72;
-/** Limit rozmiaru wynikowego Data URL (~700 kB — margines pod limit 1 MB dokumentu). */
+/**
+ * Limit dlugosci wynikowego Data URL w bajtach. Firestore przechowuje caly
+ * string Data URL (base64 + prefiks), wiec liczymy dlugosc stringa, nie
+ * zdekodowane bajty. 700 kB zostawia realny margines pod limit 1 MB dokumentu
+ * (reszta pol: nazwa, notatki, tagi).
+ */
 const MAX_RESULT_BYTES = 700 * 1024;
 
 function readAsDataUrl(file: File): Promise<string> {
@@ -38,10 +43,12 @@ function fitDimensions(w: number, h: number, max: number): { width: number; heig
   return { width: Math.round(w * scale), height: Math.round(h * scale) };
 }
 
-/** Szacuje rozmiar w bajtach zakodowanego Data URL (czesc base64). */
+/**
+ * Rozmiar Data URL tak, jak zapisze go Firestore: dlugosc calego stringa
+ * (znaki base64 sa 1-bajtowe w UTF-8), NIE zdekodowane bajty obrazu.
+ */
 function dataUrlByteSize(dataUrl: string): number {
-  const base64 = dataUrl.split(',')[1] ?? '';
-  return Math.floor((base64.length * 3) / 4);
+  return dataUrl.length;
 }
 
 /**

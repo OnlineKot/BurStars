@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Burger } from './types/burger';
 import { BurgerListView } from './views/BurgerListView';
 import { AddBurgerView } from './views/AddBurgerView';
@@ -46,6 +46,15 @@ export function App() {
     onUnlock: () => void handleOwnerLogin(),
     onCodeRequired: () => setShowCodeGate(true),
   });
+
+  // Utrata uprawnien (np. wylogowanie) na ekranie dodawania -> wroc do listy,
+  // inaczej glowny obszar zostalby pusty.
+  useEffect(() => {
+    if (!owner && screen === 'add') {
+      setEditing(null);
+      setScreen('list');
+    }
+  }, [owner, screen]);
 
   function goList() {
     setEditing(null);
@@ -96,7 +105,12 @@ export function App() {
           />
         )}
         {screen === 'add' && owner && (
-          <AddBurgerView editing={editing} onDone={goList} onCancel={goList} />
+          <AddBurgerView
+            key={editing?.id ?? 'new'}
+            editing={editing}
+            onDone={goList}
+            onCancel={goList}
+          />
         )}
         {screen === 'stats' && <StatsView key={reloadKey} />}
       </main>

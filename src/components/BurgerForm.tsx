@@ -66,11 +66,13 @@ export function BurgerForm({ initial, onSubmit, onCancel }: BurgerFormProps) {
         {
           name,
           rating,
-          locationName: locationName.trim() || undefined,
+          // puste stringi celowo: przy edycji nadpisuja (czyszcza) stare wartosci
+          locationName: locationName.trim(),
           tags,
-          notes: notes.trim() || undefined,
-          // zachowaj istniejace zdjecie, jesli nie wybrano nowego
-          photos: initial?.photos ?? [],
+          notes: notes.trim(),
+          // brak podgladu = uzytkownik usunal zdjecie -> zapisz pusta liste;
+          // nowy plik i tak nadpisze to pole warstwe wyzej
+          photos: photoPreview === null ? [] : initial?.photos ?? [],
         },
         photoFile,
       );
@@ -139,6 +141,7 @@ export function BurgerForm({ initial, onSubmit, onCancel }: BurgerFormProps) {
           className="field__input"
           type="text"
           value={locationName}
+          maxLength={200}
           placeholder="np. Bar Burgerowy, Krakow"
           onChange={(e) => setLocationName(e.target.value)}
         />
@@ -161,6 +164,7 @@ export function BurgerForm({ initial, onSubmit, onCancel }: BurgerFormProps) {
           className="field__input field__textarea"
           value={notes}
           rows={3}
+          maxLength={2000}
           placeholder="Krotki opis wrazen…"
           onChange={(e) => setNotes(e.target.value)}
         />

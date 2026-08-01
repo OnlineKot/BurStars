@@ -25,7 +25,8 @@ export function useBurgers(sort: BurgerSort = 'newest'): UseBurgersState {
     setLoading(true);
     setError(null);
     try {
-      const data = await listBurgers({ sort });
+      // ten sam limit co statystyki (useStats), aby liczby sie zgadzaly
+      const data = await listBurgers({ sort, max: 500 });
       setBurgers(data);
     } catch (err) {
       const message =
